@@ -1,0 +1,39 @@
+name: wallet_lib
+description: "A new Flutter module project."
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  wallet: ^0.0.13
+  web3dart: ^2.7.0
+  bip39: ^1.0.6
+  hex: ^0.2.0
+  ed25519_hd_key: ^2.2.0
+  eip1559: ^0.6.2
+  http: ^1.0.0
+  shared_preferences: ^2.2.1
+  webview_flutter: ^4.2.2
+  intl: ^0.18.1
+  qr_flutter: ^4.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/scripts/dapp/
+  module:
+    androidX: true
+    androidPackage: com.example.wallet_lib
+    iosBundleIdentifier: com.example.walletLib
