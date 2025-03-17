@@ -1,11 +1,39 @@
 # wallet_lib
 
-A new Flutter module project.
+### Add dependency
+```yaml
+dependencies:
+ wallet_lib:
+    git:
+        url: https://github.com/Vincent8725/wallet_lib.git
+```
 
-## Getting Started
+###  Example
+```dart
+import 'package:wallet_lib/features/home/screens/main_screen.dart';
 
-For help getting started with Flutter development, view the online
-[documentation](https://flutter.dev/).
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-For instructions integrating Flutter modules to your existing applications,
-see the [add-to-app documentation](https://flutter.dev/to/add-to-app).
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      home: 
+        Center(
+            child: ElevatedButton(
+                onPressed: () {
+                    // Open Wallet Main Page
+                    navigatorKey.currentState?.push(
+                    MaterialPageRoute(builder: (context) => MainScreen()),
+                    );
+                },
+                child: const Text('Open Wallet'),
+            ),
+        ),
+    );
+  }
+}
+```
