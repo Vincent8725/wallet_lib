@@ -1,17 +1,16 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'package:http/http.dart' as http;
 import 'package:web3dart/web3dart.dart' as web3;
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:hex/hex.dart';
 import 'package:ed25519_hd_key/ed25519_hd_key.dart';
-import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/chain_config.dart';
 import '../../models/wallet.dart';
 import '../../models/transaction.dart';
 import '../../models/token.dart';
 import '../../models/wallet.dart' as wallet_model;
-import '../config/chain_config.dart';
 
 class WalletService {
   // 通过助记词创建钱包
@@ -101,7 +100,7 @@ class WalletService {
         client.dispose();
       }
     } catch (e) {
-      print('获取余额失败: $e');
+      dev.log('获取余额失败: $e');
       return 0.0;
     }
   }
@@ -158,7 +157,7 @@ class WalletService {
 
       return [];
     } catch (e) {
-      print('获取交易记录失败: $e');
+      dev.log('获取交易记录失败: $e');
       return [];
     }
   }
@@ -177,7 +176,7 @@ class WalletService {
 
       return 0.0;
     } catch (e) {
-      print('获取${chainType}价格失败: $e');
+      dev.log('获取${chainType}价格失败: $e');
       return 0.0;
     }
   }
@@ -206,7 +205,7 @@ class WalletService {
         final gasPrice = await client.getGasPrice();
 
         // 估算Gas用量
-        final gasLimit = 21000; // 标准ETH转账的Gas限制
+        const gasLimit = 21000; // 标准ETH转账的Gas限制
 
         // 创建交易
         final transaction = web3.Transaction(
@@ -231,7 +230,7 @@ class WalletService {
         client.dispose();
       }
     } catch (e) {
-      print('发送交易失败: $e');
+      dev.log('发送交易失败: $e');
       throw Exception('发送交易失败: $e');
     }
   }
@@ -259,6 +258,18 @@ class WalletService {
       // 如果没有代币，添加默认代币
       if (tokens.isEmpty) {
         if (chainType == 'ETH') {
+          // 为ETH链添加ETH原生代币
+          final ethToken = Token(
+            address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH原生代币地址
+            name: 'Ethereum',
+            symbol: 'ETH',
+            decimals: 18,
+            balance: await getBalance(address, chainType), // 获取当前ETH余额
+            price: await getTokenPrice('ETH'),
+            chainType: 'ETH',
+          );
+          tokens.add(ethToken);
+          
           // 为ETH链添加USDT默认代币
           final usdtToken = Token(
             address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', // 以太坊主网USDT合约地址
@@ -272,17 +283,29 @@ class WalletService {
           tokens.add(usdtToken);
           await _saveTokens(address, chainType, tokens);
         } else if (chainType == 'BSC') {
-          // 为BSC链添加BNB默认代币
+          // 为BSC链添加BNB原生代币
           final bnbToken = Token(
-            address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', // BSC上的BNB合约地址
+            address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // BNB原生代币地址
             name: 'Binance Coin',
             symbol: 'BNB',
             decimals: 18,
-            balance: 0.0,
-            price: 300.0,
+            balance: await getBalance(address, chainType), // 获取当前BNB余额
+            price: await getTokenPrice('BSC'),
             chainType: 'BSC',
           );
           tokens.add(bnbToken);
+          
+          // 为BSC链添加USDT默认代币
+          final usdtToken = Token(
+            address: '0x55d398326f99059fF775485246999027B3197955', // BSC上的USDT合约地址
+            name: 'Tether USD',
+            symbol: 'USDT',
+            decimals: 18,
+            balance: 0.0,
+            price: 1.0,
+            chainType: 'BSC',
+          );
+          tokens.add(usdtToken);
           await _saveTokens(address, chainType, tokens);
         }
       }
@@ -291,13 +314,31 @@ class WalletService {
       List<Token> updatedTokens = [];
       for (var token in tokens) {
         try {
-          final balance = await getTokenBalance(
-              address, token.address, chainType);
-          final price = await getTokenPrice(token.symbol);
-          updatedTokens.add(
-              token.copyWithBalance(balance).copyWithPrice(price));
+          double balance;
+          // 如果是原生代币，使用getBalance方法获取余额
+          if (token.address == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE') {
+            balance = await getBalance(address, chainType);
+          } else {
+            // 否则使用getTokenBalance获取ERC20代币余额
+            balance = await getTokenBalance(address, token.address, chainType);
+          }
+          
+          double price;
+          // 如果是USDT，价格固定为1
+          if (token.symbol == 'USDT') {
+            price = 1.0;
+          } else if (token.symbol == 'ETH' || token.symbol == 'BNB') {
+            // 如果是原生代币，使用getTokenPrice获取价格
+            price = await getTokenPrice(token.chainType);
+          } else {
+            // 其他代币
+            price = await getTokenPrice(token.symbol);
+          }
+          
+          updatedTokens.add(token.copyWithBalance(balance).copyWithPrice(price));
         } catch (e) {
           // 如果获取余额失败，仍然添加原始代币
+          dev.log('更新代币${token.symbol}信息失败: $e', name: 'getTokens');
           updatedTokens.add(token);
         }
       }
@@ -307,7 +348,7 @@ class WalletService {
 
       return updatedTokens;
     } catch (e) {
-      print('获取代币列表失败: $e');
+      dev.log('获取代币列表失败: $e', name: 'getTokens', error: e);
       return [];
     }
   }
@@ -437,7 +478,7 @@ class WalletService {
       // 保存代币列表
       return await _saveTokens(walletAddress, token.chainType, tokens);
     } catch (e) {
-      print('添加代币失败: $e');
+      dev.log('添加代币失败: $e');
       return false;
     }
   }
@@ -453,7 +494,7 @@ class WalletService {
           .toList();
       return await prefs.setStringList(key, tokensJson);
     } catch (e) {
-      print('保存代币列表失败: $e');
+      dev.log('保存代币列表失败: $e');
       return false;
     }
   }

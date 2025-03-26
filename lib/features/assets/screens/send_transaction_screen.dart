@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/wallet_service.dart';
 import '../../../core/services/wallet_storage_service.dart';
 import '../../../core/config/chain_config.dart';
-import '../../../shared/widgets/transaction_list.dart';
+import '../../wallet/widgets/transaction_list.dart';
 
 class SendTransactionScreen extends StatefulWidget {
   final String address;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/transaction.dart';
-import '../../core/services/wallet_service.dart';
+import '../../../models/transaction.dart';
+import '../../../core/services/wallet_service.dart';
 
 class TransactionList extends StatefulWidget {
   final bool expanded;

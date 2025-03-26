@@ -1,8 +1,8 @@
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
-import '../../core/services/wallet_service.dart';
-import '../../core/services/wallet_storage_service.dart';
-import '../../core/config/chain_config.dart';
-import '../../models/token.dart';
+import '../../../core/services/wallet_service.dart';
+import '../../../core/services/wallet_storage_service.dart';
+import '../../../core/config/chain_config.dart';
 
 class BalanceCard extends StatefulWidget {
   final String address;
@@ -44,6 +44,8 @@ class _BalanceCardState extends State<BalanceCard> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return; // 添加检查，如果组件已卸载则直接返回
+    
     setState(() {
       _isLoading = true;
     });
@@ -71,35 +73,47 @@ class _BalanceCardState extends State<BalanceCard> {
         totalValue += token.balance * token.price;
       }
 
-      setState(() {
-        _totalUsdValue = totalValue;
-        _walletName = wallet?.name ?? '我的钱包';
-        _isLoading = false;
-      });
+      // 添加mounted检查
+      if (mounted) {
+        setState(() {
+          _totalUsdValue = totalValue;
+          _walletName = wallet?.name ?? '我的钱包';
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      print('加载余额失败: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      dev.log('加载余额失败: $e', name: 'BalanceCard');
+      // 添加mounted检查
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final chainConfig = ChainConfigs.getChainConfig(widget.chainType);
-    final backgroundColor =
-        widget.useDarkStyle ? Theme.of(context).primaryColor : Colors.white;
-    final textColor = widget.useDarkStyle ? Colors.white : Colors.black;
+    // 使用主题颜色而不是硬编码颜色
+    final backgroundColor = widget.useDarkStyle 
+        ? Theme.of(context).primaryColor 
+        : Theme.of(context).cardColor;
+    final textColor = widget.useDarkStyle 
+        ? Colors.white 
+        : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
     return Card(
       elevation: 4,
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       color: backgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      // 使用主题定义的卡片形状
+      shape: Theme.of(context).cardTheme.shape,
+      // shape: RoundedRectangleBorder(
+      //   borderRadius: BorderRadius.circular(16),
+      // ),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -110,20 +124,20 @@ class _BalanceCardState extends State<BalanceCard> {
                 Text(
                   chainConfig.name,
                   style: TextStyle(
-                    color: textColor.withOpacity(0.8),
+                    color: textColor, // 使用withValues替代withOpacity, 0.8 * 255 ≈ 204
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   _walletName,
                   style: TextStyle(
-                    color: textColor.withOpacity(0.8),
+                    color: textColor, // 0.8 * 255 ≈ 204
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             // 地址
             Text(
@@ -131,31 +145,21 @@ class _BalanceCardState extends State<BalanceCard> {
                   ? '${widget.address.substring(0, 10)}...${widget.address.substring(widget.address.length - 10)}'
                   : widget.address,
               style: TextStyle(
-                color: textColor.withOpacity(0.6),
+                color: textColor, // 0.6 * 255 ≈ 153
                 fontSize: 12,
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // 总资产价值
             Center(
-              child: _isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(textColor),
-                      ),
-                    )
-                  : Column(
-                      children: [
-                        // Text(
-                        //   '总资产价值',
-                        //   style: TextStyle(
-                        //     color: textColor.withOpacity(0.7),
-                        //     fontSize: 14,
-                        //   ),
-                        // ),
-                        // SizedBox(height: 8),
-                        Text(
+              child: Column(
+                children: [
+                  _isLoading
+                      ? CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                        )
+                      : Text(
                           '\$${_totalUsdValue.toStringAsFixed(2)}',
                           style: TextStyle(
                             color: textColor,
@@ -163,8 +167,8 @@ class _BalanceCardState extends State<BalanceCard> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
+                ],
+              ),
             ),
           ],
         ),

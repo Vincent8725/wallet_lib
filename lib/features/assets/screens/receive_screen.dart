@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/config/chain_config.dart';
-import '../../../shared/widgets/transaction_list.dart';
+import '../../wallet/widgets/transaction_list.dart';
 
 class ReceiveScreen extends StatefulWidget {
   final String address;

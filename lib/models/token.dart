@@ -74,4 +74,25 @@ class Token {
       logoUrl: logoUrl,
     );
   }
+
+  // 添加copyWith方法，方便更新价格
+  Token copyWith({
+    String? name,
+    String? symbol,
+    int? decimals,
+    String? address,
+    double? balance,
+    double? price,
+    String? chainType,
+  }) {
+    return Token(
+      name: name ?? this.name,
+      symbol: symbol ?? this.symbol,
+      decimals: decimals ?? this.decimals,
+      address: address ?? this.address,
+      balance: balance ?? this.balance,
+      price: price ?? this.price,
+      chainType: chainType ?? this.chainType,
+    );
+  }
 }

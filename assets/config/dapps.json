@@ -1,0 +1,160 @@
+{
+  "banners": [
+    {
+      "chainId":"0x1",
+      "image": "assets/images/banner1.jpg",
+      "url": "https://app.uniswap.org",
+      "title": "Uniswap V3 - 领先的去中心化交易所"
+    },
+    {
+      "chainId":"0x56",
+      "image": "assets/images/pancakeswap.jpg",
+      "url": "https://pancakeswap.finance",
+      "title": "PancakeSwap - BSC上领先的去中心化交易所"
+    }
+  ],
+  "eth": [
+    {
+      "chainId":"0x1",
+      "name": "Uniswap",
+      "url": "https://app.uniswap.org",
+      "icon": "assets/icons/dapp/uniswap.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "OpenSea",
+      "url": "https://opensea.io",
+      "icon": "assets/icons/dapp/opensea.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "Aave",
+      "url": "https://app.aave.com",
+      "icon": "assets/icons/dapp/aave.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "Compound",
+      "url": "https://app.compound.finance",
+      "icon": "assets/icons/dapp/compound.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "dYdX",
+      "url": "https://dydx.exchange",
+      "icon": "assets/icons/dapp/dydx.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "Curve",
+      "url": "https://curve.fi",
+      "icon": "assets/icons/dapp/curve.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "SushiSwap",
+      "url": "https://app.sushi.com",
+      "icon": "assets/icons/dapp/sushiswap.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "Balancer",
+      "url": "https://app.balancer.fi",
+      "icon": "assets/icons/dapp/balancer.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "1inch",
+      "url": "https://app.1inch.io",
+      "icon": "assets/icons/dapp/1inch.png"
+    },
+    {
+      "chainId":"0x1",
+      "name": "Yearn",
+      "url": "https://yearn.finance",
+      "icon": "assets/icons/dapp/yearn.png"
+    }
+  ],
+  "bsc": [
+    {
+      "chainId":"0x56",
+      "name": "PancakeSwap",
+      "url": "https://pancakeswap.finance",
+      "icon": "assets/icons/dapp/pancakeswap.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Venus",
+      "url": "https://app.venus.io",
+      "icon": "assets/icons/dapp/venus.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Alpaca Finance",
+      "url": "https://app.alpacafinance.org",
+      "icon": "assets/icons/dapp/alpaca.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Autofarm",
+      "url": "https://www.bakeryswap.org/",
+      "icon": "assets/icons/dapp/bakeryswap.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "MDEX",
+      "url": "https://mdex.com",
+      "icon": "assets/icons/dapp/mdex.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Biswap",
+      "url": "https://biswap.org",
+      "icon": "assets/icons/dapp/biswap.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "BabySwap",
+      "url": "https://babyswap.finance",
+      "icon": "assets/icons/dapp/babyswap.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "ApeSwap",
+      "url": "https://apeswap.finance",
+      "icon": "assets/icons/dapp/apeswap.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "1inch",
+      "url": "https://app.1inch.io",
+      "icon": "assets/icons/dapp/1inch.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Beefy Finance",
+      "url": "https://app.beefy.finance",
+      "icon": "assets/icons/dapp/beefy.png"
+    }
+  ],
+  "favorite": [
+    {
+      "chainId":"0x56",
+      "name": "PancakeSwap",
+      "url": "https://pancakeswap.finance",
+      "icon": "assets/icons/dapp/pancakeswap.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Venus",
+      "url": "https://app.venus.io",
+      "icon": "assets/icons/dapp/venus.png"
+    },
+    {
+      "chainId":"0x56",
+      "name": "Alpaca Finance",
+      "url": "https://app.alpacafinance.org",
+      "icon": "assets/icons/dapp/alpaca.png"
+    }
+  ]
+}

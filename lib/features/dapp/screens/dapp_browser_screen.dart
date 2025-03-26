@@ -1,16 +1,22 @@
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../core/services/dapp_service.dart';
 import '../../../core/services/wallet_storage_service.dart';
-import '../widgets/dapp_webview2.dart';
+import '../../../core/services/chain_service.dart'; // 添加链服务
+import '../widgets/dapp_webview.dart';
 import '../widgets/transaction_confirmation_dialog.dart';
 
 class DAppBrowserScreen extends StatefulWidget {
   final String initialUrl;
+  final String name;
+  final String? chainId; // 添加chainId参数
 
   const DAppBrowserScreen({
     Key? key,
     this.initialUrl = 'https://app.uniswap.org',
+    this.name = 'Uniswap',
+    this.chainId, // 接收chainId参数
   }) : super(key: key);
 
   @override
@@ -23,26 +29,112 @@ class _DAppBrowserScreenState extends State<DAppBrowserScreen> {
   final WalletStorageService _walletService = WalletStorageService();
 
   // 确保使用正确的类型
-  final GlobalKey<DAppWebView2State> _webViewKey = GlobalKey<DAppWebView2State>();
+  final GlobalKey<DAppWebViewState> _webViewKey = GlobalKey<DAppWebViewState>();
 
   String _currentUrl = '';
-  bool _isLoading = false;
+  String _currentName = '';
   bool _isAuthorized = false;
   String _currentWalletAddress = '';
   bool _isWalletConnected = false;
+  String _currentChainId = ''; // 默认以太坊链ID
 
+  // 添加收藏状态
+  bool _isFavorite = false;
+  
   @override
   void initState() {
     super.initState();
     _urlController.text = widget.initialUrl;
     _currentUrl = widget.initialUrl;
-    _loadCurrentWallet(); // 加载当前钱包
-  }
+    _currentName = widget.name;
+    // 如果传入了chainId，设置当前链ID
+    if (widget.chainId != null && widget.chainId!.isNotEmpty) {
+      dev.log('Received chainId: ${widget.chainId}', name: 'DAppBrowserScreen');
+      _currentChainId = widget.chainId!;
+    } else {
 
+      // 否则尝试从ChainService获取当前链ID
+      _loadCurrentChainId();
+
+      dev.log('Load current chainId: $_currentChainId', name: 'DAppBrowserScreen');
+    }
+    
+    _loadCurrentWallet(); // 加载当前钱包
+    _checkFavoriteStatus(); // 检查收藏状态
+  }
+  
+  // 检查当前DApp是否已收藏
+  Future<void> _checkFavoriteStatus() async {
+    try {
+      final isFavorite = await _dappService.isFavoriteDApp(_currentUrl);
+      setState(() {
+        _isFavorite = isFavorite;
+      });
+    } catch (e) {
+      print('检查收藏状态失败: $e');
+    }
+  }
+  
+  // 切换收藏状态
+  Future<void> _toggleFavorite() async {
+    try {
+      if (_isFavorite) {
+        // 取消收藏
+        await _dappService.removeFavoriteDApp(_currentUrl);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已从收藏中移除')),
+        );
+      } else {
+        // 添加收藏
+        final host = Uri.parse(_currentUrl).host;
+        final dappName = host.replaceAll('www.', '');
+        
+        await _dappService.addFavoriteDApp(
+          _currentUrl, 
+          dappName,
+          _currentChainId,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已添加到收藏')),
+        );
+      }
+      
+      // 更新收藏状态
+      await _checkFavoriteStatus();
+    } catch (e) {
+      print('切换收藏状态失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('操作失败: $e')),
+      );
+    }
+  }
+  
+  void _onUrlChanged(String url) {
+    setState(() {
+      _currentUrl = url;
+      _urlController.text = url;
+    });
+    _checkAuthorization();
+    _checkFavoriteStatus(); // 当URL变化时检查收藏状态
+  }
+  
   @override
   void dispose() {
     _urlController.dispose();
     super.dispose();
+  }
+
+  // 加载当前链ID
+  Future<void> _loadCurrentChainId() async {
+    try {
+      final chainName = await ChainService.getCurrentChain();
+      final chainId = ChainService.getChainIdByName(chainName);
+      setState(() {
+        _currentChainId = chainId;
+      });
+    } catch (e) {
+      print('加载当前链ID失败: $e');
+    }
   }
 
   // 加载当前钱包
@@ -87,20 +179,35 @@ Future<bool> showConnectDialog() async {
 }
 
 // 添加switchChainTo方法
-Future<bool> switchChainTo(String chainId) async {
-  // 这里添加实际链切换逻辑，例如：
-  // 1. 检查chainId是否在支持的链列表中
-  // 2. 通知区块链节点切换链
-  // 3. 更新UI状态
-  // 示例返回：
-  if (chainId == '0x1') {
-    setState(() {
-      // 更新当前链状态
-    });
-    return true;
+// 修改switchChainTo方法，更新当前链
+  Future<bool> switchChainTo(String chainId) async {
+    // 检查chainId是否在支持的链列表中
+    if (chainId == '0x1' || chainId == '0x38') { // 以太坊和BSC
+      setState(() {
+        _currentChainId = chainId;
+      });
+      
+      // 更新ChainService中的当前链
+      final chainName = ChainService.getChainNameByChainId(chainId);
+      await ChainService.setCurrentChain(chainName);
+      
+      // 通知用户链已切换
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已切换到 ${chainName.toUpperCase()} 链')),
+      );
+      
+      // 刷新WebView以应用新的链设置
+      _webViewKey.currentState?.reload();
+      
+      return true;
+    }
+    
+    // 不支持的链
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('不支持的链ID: $chainId')),
+    );
+    return false;
   }
-  return false;
-}
 
 
 
@@ -159,7 +266,6 @@ Future<bool> switchChainTo(String chainId) async {
     if (_currentWalletAddress.isEmpty) return;
 
     setState(() {
-      _isLoading = true;
     });
 
     try {
@@ -171,7 +277,6 @@ Future<bool> switchChainTo(String chainId) async {
       print('检查授权状态失败: $e');
     } finally {
       setState(() {
-        _isLoading = false;
       });
     }
   }
@@ -185,7 +290,6 @@ Future<bool> switchChainTo(String chainId) async {
     }
 
     setState(() {
-      _isLoading = true;
     });
 
     try {
@@ -218,7 +322,6 @@ Future<bool> switchChainTo(String chainId) async {
       );
     } finally {
       setState(() {
-        _isLoading = false;
       });
     }
   }
@@ -258,56 +361,40 @@ Future<bool> switchChainTo(String chainId) async {
     return await _dappService.interact(
         _currentUrl, method, params, wallet.privateKey);
   }
-
-  void _onUrlChanged(String url) {
-    setState(() {
-      _currentUrl = url;
-      _urlController.text = url;
-    });
-    _checkAuthorization();
-  }
-
-  void _navigateToUrl() {
-    final url = _urlController.text.trim();
-    if (url.isNotEmpty) {
-      setState(() {
-        _currentUrl = url;
-      });
-      _checkAuthorization();
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            _currentUrl.isNotEmpty ? Uri.parse(_currentUrl).host : 'DApp 浏览器'),
+            _currentName.isNotEmpty ? _currentName : 'DApp 浏览器',style: TextStyle(fontSize: 18)),
         actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeWidth: 2,
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: Icon(_isAuthorized ? Icons.lock_open : Icons.lock),
-              onPressed: _toggleAuthorization,
-              tooltip: _isAuthorized ? '撤销授权' : '授权DApp',
+          // 添加当前链显示
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: _currentChainId == '0x1' ? Colors.blue : Colors.amber,
+              borderRadius: BorderRadius.circular(12),
             ),
-          // 添加连接钱包按钮
-          IconButton(
-            icon: Icon(_isWalletConnected ? Icons.link : Icons.link_off),
-            onPressed: _connectWallet,
-            tooltip: _isWalletConnected ? '已连接钱包' : '连接钱包',
+            child: Text(
+              _currentChainId == '0x1' ? 'ETH' : 'BSC',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ),
+          
+          // 添加收藏按钮
+          IconButton(
+            icon: Icon(_isFavorite ? Icons.star : Icons.star_border),
+            onPressed: _toggleFavorite,
+            tooltip: _isFavorite ? '取消收藏' : '收藏DApp',
+          ),
+          
           // 修改刷新按钮实现
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -359,27 +446,23 @@ Future<bool> switchChainTo(String chainId) async {
               ),
             ),
 
-          // 移除地址栏和前往按钮
-
           Expanded(
-            child: DAppWebView2(
+            child: DAppWebView(
               key: _webViewKey, // 确保使用key
               url: _currentUrl,
               walletAddress: _currentWalletAddress,
               isWalletConnected: _isWalletConnected,
+              chainId: _currentChainId, // 传递当前链ID
               onConnectRequest: (url) async {
-                // 使用已有的连接钱包方法，而不是showConnectDialog
                 return await _connectWallet();
               },
               onChainSwitch: (chainId) async {
-                // 处理链切换逻辑
                 return await switchChainTo(chainId);
               },
               onCustomRequest: (method, params) {
-                // 处理其他请求
                 print('Custom request: $method, params: $params');
               },
-              onUrlChanged: _onUrlChanged, // 添加URL变更回调
+              onUrlChanged: _onUrlChanged,
             ),
           ),
         ],

@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web3dart/crypto.dart';
@@ -40,7 +41,7 @@ class DAppService {
       
       return true;
     } catch (e) {
-      print('DApp授权失败: $e');
+      dev.log('DApp授权失败: $e');
       return false;
     }
   }
@@ -58,7 +59,7 @@ class DAppService {
       
       return true;
     } catch (e) {
-      print('撤销DApp授权失败: $e');
+      dev.log('撤销DApp授权失败: $e');
       return false;
     }
   }
@@ -84,7 +85,7 @@ class DAppService {
           throw Exception('不支持的方法: $method');
       }
     } catch (e) {
-      print('DApp交互失败: $e');
+      dev.log('DApp交互失败: $e');
       rethrow;
     }
   }
@@ -116,7 +117,7 @@ class DAppService {
       final from = params['from'];
       final to = params['to'];
       final value = params['value'] != null ? 
-          EtherAmount.fromUnitAndValue(EtherUnit.wei, BigInt.parse(params['value'])) : 
+          EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(params['value'])) :
           EtherAmount.zero();
       final data = params['data'] ?? '0x';
       
@@ -144,7 +145,7 @@ class DAppService {
     final credentials = EthPrivateKey.fromHex(privateKey);
     
     // 签名消息
-    final signature = await credentials.signPersonalMessage(utf8.encode(message));
+    final signature = credentials.signPersonalMessageToUint8List(utf8.encode(message));
     return bytesToHex(signature);
   }
   
@@ -170,8 +171,109 @@ class DAppService {
       // 简单实现，直接返回成功
       return true;
     } catch (e) {
-      print('连接钱包失败: $e');
+      dev.log('连接钱包失败: $e');
       return false;
+    }
+  }
+  
+  // 检查DApp是否已收藏
+  Future<bool> isFavoriteDApp(String url) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favorites = prefs.getStringList('favorite_dapps') ?? [];
+      
+      // 提取域名进行比较
+      final host = Uri.parse(url).host;
+      
+      for (final favorite in favorites) {
+        final favoriteData = json.decode(favorite);
+        final favoriteUrl = favoriteData['url'];
+        final favoriteHost = Uri.parse(favoriteUrl).host;
+        
+        if (favoriteHost == host) {
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (e) {
+      dev.log('检查DApp收藏状态失败: $e');
+      return false;
+    }
+  }
+  
+  // 添加DApp到收藏
+  Future<bool> addFavoriteDApp(String url, String name, String chainId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favorites = prefs.getStringList('favorite_dapps') ?? [];
+      
+      // 检查是否已存在
+      if (await isFavoriteDApp(url)) {
+        return true; // 已经收藏过了
+      }
+      
+      // 创建收藏数据
+      final dappData = {
+        'name': name,
+        'url': url,
+        'chainId': chainId,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      };
+      
+      // 添加到收藏列表
+      favorites.add(json.encode(dappData));
+      
+      // 保存更新后的列表
+      await prefs.setStringList('favorite_dapps', favorites);
+      
+      return true;
+    } catch (e) {
+      dev.log('添加DApp到收藏失败: $e');
+      return false;
+    }
+  }
+  
+  // 从收藏中移除DApp
+  Future<bool> removeFavoriteDApp(String url) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favorites = prefs.getStringList('favorite_dapps') ?? [];
+      
+      // 提取域名进行比较
+      final host = Uri.parse(url).host;
+      
+      // 过滤掉要移除的DApp
+      final updatedFavorites = favorites.where((favorite) {
+        final favoriteData = json.decode(favorite);
+        final favoriteUrl = favoriteData['url'];
+        final favoriteHost = Uri.parse(favoriteUrl).host;
+        
+        return favoriteHost != host;
+      }).toList();
+      
+      // 保存更新后的列表
+      await prefs.setStringList('favorite_dapps', updatedFavorites);
+      
+      return true;
+    } catch (e) {
+      dev.log('从收藏中移除DApp失败: $e');
+      return false;
+    }
+  }
+  
+  // 获取所有收藏的DApp
+  Future<List<Map<String, dynamic>>> getFavoriteDApps() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favorites = prefs.getStringList('favorite_dapps') ?? [];
+      
+      return favorites.map((favorite) {
+        return Map<String, dynamic>.from(json.decode(favorite));
+      }).toList();
+    } catch (e) {
+      dev.log('获取收藏DApp列表失败: $e');
+      return [];
     }
   }
 }

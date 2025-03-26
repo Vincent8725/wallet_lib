@@ -9,7 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.2
   wallet: ^0.0.13
   web3dart: ^2.7.0
   bip39: ^1.0.6
@@ -19,6 +19,7 @@ dependencies:
   http: ^1.0.0
   shared_preferences: ^2.2.1
   webview_flutter: ^4.2.2
+  intl: ^0.18.1
   qr_flutter: ^4.1.0
 
 dev_dependencies:
@@ -30,8 +31,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/icons/
+    - assets/icons/dapp/
+    - assets/icons/token/
     - assets/scripts/dapp/
+    - assets/config/
   module:
     androidX: true
     androidPackage: com.example.wallet_lib

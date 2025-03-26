@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_lib/features/home/screens/main_screen.dart';
-import 'package:web3dart/credentials.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -20,16 +19,6 @@ class MainApp extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  final privateKey = EthPrivateKey.createRandom();
-                  final address = privateKey.address;
-                  print(address);
-                },
-                child: const Text('Create Wallet'),
-              ),
-            ),
             Center(
               child: ElevatedButton(
                 onPressed: () {

@@ -12,7 +12,8 @@ class WalletManagementScreen extends StatefulWidget {
 }
 
 // 添加SingleTickerProviderStateMixin以支持TabController
-class _WalletManagementScreenState extends State<WalletManagementScreen> with SingleTickerProviderStateMixin {
+class _WalletManagementScreenState extends State<WalletManagementScreen>
+    with SingleTickerProviderStateMixin {
   final WalletStorageService _storageService = WalletStorageService();
   final WalletService _walletService = WalletService(); // 添加WalletService
   List<Wallet> _wallets = [];
@@ -25,13 +26,14 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
   void initState() {
     super.initState();
     _supportedChains = ChainConfigs.supportedChains; // 获取支持的链
-    _tabController = TabController(length: _supportedChains.length, vsync: this); // 初始化TabController
+    _tabController = TabController(
+        length: _supportedChains.length, vsync: this); // 初始化TabController
     _loadWallets().then((_) {
       // 加载钱包后，自动切换到当前钱包的链
       _switchToCurrentWalletChain();
     });
   }
-  
+
   // 添加切换到当前钱包链的方法
   void _switchToCurrentWalletChain() {
     if (_currentWalletAddress != null) {
@@ -40,12 +42,11 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
         (wallet) => wallet.address == _currentWalletAddress,
         orElse: () => _wallets.first,
       );
-      
+
       // 查找当前钱包的链在支持链列表中的索引
-      final chainIndex = _supportedChains.indexWhere(
-        (chain) => chain.id == currentWallet.chainType
-      );
-      
+      final chainIndex = _supportedChains
+          .indexWhere((chain) => chain.id == currentWallet.chainType);
+
       // 如果找到了对应的链，切换到该链
       if (chainIndex >= 0) {
         setState(() {
@@ -54,7 +55,7 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
       }
     }
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose(); // 释放TabController
@@ -91,7 +92,7 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
         _currentWalletAddress = address;
       });
       _showSuccessSnackBar('已切换到选中钱包');
-      
+
       // 不应该在这里调用Navigator.pop，因为这会导致页面关闭
       // 只有在从其他页面调用时才需要返回
     } catch (e) {
@@ -235,35 +236,38 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
   // 添加更新钱包余额的方法
   Future<void> _updateWalletBalances() async {
     if (_wallets.isEmpty) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       List<Wallet> updatedWallets = [];
-      
+
       for (var wallet in _wallets) {
         // 获取ETH余额
-        final ethBalance = await _walletService.getBalance(wallet.address, 'ETH');
+        final ethBalance =
+            await _walletService.getBalance(wallet.address, 'ETH');
         // 获取BSC余额
-        final bscBalance = await _walletService.getBalance(wallet.address, 'BSC');
-        
+        final bscBalance =
+            await _walletService.getBalance(wallet.address, 'BSC');
+
         // 更新钱包余额
-        final updatedWallet = wallet.copyWithBalance('ETH', ethBalance)
-                                   .copyWithBalance('BSC', bscBalance);
-        
+        final updatedWallet = wallet
+            .copyWithBalance('ETH', ethBalance)
+            .copyWithBalance('BSC', bscBalance);
+
         // 保存更新后的钱包
         await _storageService.saveWallet(updatedWallet);
-        
+
         updatedWallets.add(updatedWallet);
       }
-      
+
       setState(() {
         _wallets = updatedWallets;
         _isLoading = false;
       });
-      
+
       _showSuccessSnackBar('余额已更新');
     } catch (e) {
       setState(() {
@@ -278,18 +282,18 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
     try {
       // 使用copyWithName方法保留钱包名称
       final updatedWallet = wallet.copyWithChainType(newChainType);
-      
+
       // 保存更新后的钱包
       await _storageService.saveWallet(updatedWallet);
-      
+
       // 设置为当前钱包
       await _storageService.setCurrentWallet(updatedWallet.address);
-      
+
       // 重新加载钱包列表
       await _loadWallets();
-      
+
       _showSuccessSnackBar('已切换到 $newChainType 链');
-      
+
       // 不应该在这里调用Navigator.pop，因为这会导致页面关闭
     } catch (e) {
       _showErrorSnackBar('切换链类型失败: $e');
@@ -316,7 +320,7 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
 
       // 保存更新后的钱包
       await _storageService.saveWallet(updatedWallet);
-      
+
       // 设置为当前钱包
       await _storageService.setCurrentWallet(updatedWallet.address);
 
@@ -332,143 +336,148 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        // 获取当前钱包并返回
-        if (_currentWalletAddress != null) {
-          // 重新从存储中获取最新的钱包信息
-          final currentWallet = await _storageService.getWalletByAddress(_currentWalletAddress!);
-          if (currentWallet != null) {
-            // 返回更新后的钱包
-            Navigator.pop(context, currentWallet);
-            return false; // 不执行默认返回操作
+        onWillPop: () async {
+          // 获取当前钱包并返回
+          if (_currentWalletAddress != null) {
+            // 重新从存储中获取最新的钱包信息
+            final currentWallet = await _storageService
+                .getWalletByAddress(_currentWalletAddress!);
+            if (currentWallet != null) {
+              // 返回更新后的钱包
+              Navigator.pop(context, currentWallet);
+              return false; // 不执行默认返回操作
+            }
           }
-        }
-        // 如果没有当前钱包，则返回true
-        return true;
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('钱包管理'),
-          actions: [
-            // 添加刷新余额按钮
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: _updateWalletBalances,
-              tooltip: '更新余额',
-            ),
-            IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateWalletScreen()),
-                );
-                if (result != null) {
-                  await _loadWallets();
-                }
-              },
-            ),
-          ],
-        ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _wallets.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+          // 如果没有当前钱包，则返回true
+          return true;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('钱包管理'),
+            actions: [
+              // 添加刷新余额按钮
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _updateWalletBalances,
+                tooltip: '更新余额',
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => CreateWalletScreen()),
+                  );
+                  if (result != null) {
+                    await _loadWallets();
+                  }
+                },
+              ),
+            ],
+          ),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _wallets.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('暂无钱包'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CreateWalletScreen(),
+                                ),
+                              );
+                              if (result != null) {
+                                await _loadWallets();
+                              }
+                            },
+                            child: const Text('创建钱包'),
+                          ),
+                        ],
+                      ),
+                    )
+                  // 使用 Row 替换 TabBarView，左侧放置标签列表，右侧显示钱包列表
+                  : Row(
                       children: [
-                        const Text('暂无钱包'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CreateWalletScreen(),
+                        // 左侧标签列表
+                        Container(
+                          width: 80, // 设置左侧标签栏宽度
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
                               ),
-                            );
-                            if (result != null) {
-                              await _loadWallets();
-                            }
-                          },
-                          child: const Text('创建钱包'),
+                            ),
+                          ),
+                          child: ListView.builder(
+                            itemCount: _supportedChains.length,
+                            itemBuilder: (context, index) {
+                              final chain = _supportedChains[index];
+                              return InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _tabController.index = index;
+                                  });
+
+                                  // 添加这行代码，当选中左侧链标签时，更新当前钱包的链类型
+                                  _updateCurrentWalletChain(chain.id);
+                                },
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: _tabController.index == index
+                                        ? Theme.of(context)
+                                            .primaryColor
+                                            .withOpacity(0.1)
+                                        : Colors.transparent,
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: _tabController.index == index
+                                            ? Theme.of(context).primaryColor
+                                            : Colors.transparent,
+                                        width: 4,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      chain.id,
+                                      style: TextStyle(
+                                        color: _tabController.index == index
+                                            ? Theme.of(context).primaryColor
+                                            : Colors.grey[700],
+                                        fontWeight:
+                                            _tabController.index == index
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        // 右侧钱包列表，使用 Expanded 填充剩余空间
+                        Expanded(
+                          child: IndexedStack(
+                            index: _tabController.index,
+                            children: _supportedChains
+                                .map((chain) => _buildWalletList(chain.id))
+                                .toList(),
+                          ),
                         ),
                       ],
                     ),
-                  )
-                // 使用 Row 替换 TabBarView，左侧放置标签列表，右侧显示钱包列表
-                : Row(
-                    children: [
-                    // 左侧标签列表
-                    Container(
-                      width: 80, // 设置左侧标签栏宽度
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(
-                            color: Colors.grey[300]!,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: ListView.builder(
-                        itemCount: _supportedChains.length,
-                        itemBuilder: (context, index) {
-                          final chain = _supportedChains[index];
-                          return InkWell(
-                            onTap: () {
-                              setState(() {
-                                _tabController.index = index;
-                              });
-                              
-                              // 添加这行代码，当选中左侧链标签时，更新当前钱包的链类型
-                              _updateCurrentWalletChain(chain.id);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                color: _tabController.index == index
-                                    ? Theme.of(context).primaryColor.withOpacity(0.1)
-                                    : Colors.transparent,
-                                border: Border(
-                                  left: BorderSide(
-                                    color: _tabController.index == index
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.transparent,
-                                    width: 4,
-                                  ),
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  chain.id,
-                                  style: TextStyle(
-                                    color: _tabController.index == index
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.grey[700],
-                                    fontWeight: _tabController.index == index
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // 右侧钱包列表，使用 Expanded 填充剩余空间
-                    Expanded(
-                      child: IndexedStack(
-                        index: _tabController.index,
-                        children: _supportedChains.map((chain) => 
-                          _buildWalletList(chain.id)
-                        ).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-      )
-    );
+        ));
   }
 
   // 修复钱包列表构建方法
@@ -482,21 +491,25 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
         final chainBalance = wallet.balances[chainType] ?? 0.0;
 
         return Card(
+          elevation: 0,
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          color: isCurrentWallet ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
+          color: Theme.of(context).primaryColor.withAlpha(25),
           shape: RoundedRectangleBorder(
             side: BorderSide(
               color: isCurrentWallet
                   ? Theme.of(context).primaryColor
                   : Colors.transparent,
-              width: 1.5,
+              width: isCurrentWallet ? 1.5 : 0,
             ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: ListTile(
+            contentPadding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
             title: Text(
               // 使用钱包名称，如果没有则显示地址
-              wallet.name.isNotEmpty ? wallet.name : '${wallet.address.substring(0, 10)}...',
+              wallet.name.isNotEmpty
+                  ? wallet.name
+                  : '${wallet.address.substring(0, 10)}...',
               style: TextStyle(
                 fontWeight: isCurrentWallet ? FontWeight.bold : null,
                 color: isCurrentWallet ? Theme.of(context).primaryColor : null,
@@ -508,7 +521,9 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
                 Text(
                   '${chainType == 'ETH' ? 'ETH' : 'BNB'}: ${chainBalance.toStringAsFixed(4)}',
                   style: TextStyle(
-                    color: isCurrentWallet ? Theme.of(context).primaryColor.withOpacity(0.7) : null,
+                    color: isCurrentWallet
+                        ? Theme.of(context).primaryColor.withAlpha(150)
+                        : null,
                   ),
                 ),
                 Text(
@@ -520,6 +535,7 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
               ],
             ),
             trailing: PopupMenuButton(
+              padding: EdgeInsets.zero,
               icon: const Icon(Icons.more_vert),
               onSelected: (value) {
                 switch (value) {
@@ -621,33 +637,33 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> with Si
       },
     );
   }
-  
+
   // 构建钱包列表项
   // 删除这两个方法
   // Widget _buildWalletItem(Wallet wallet) { ... }
   // Future<void> _selectWallet(String address) async { ... }
-  
+
   // 选择钱包
   Future<void> _selectWallet(String address) async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       await _storageService.setCurrentWallet(address);
-      
+
       setState(() {
         _currentWalletAddress = address;
         _isLoading = false;
       });
-      
+
       // 返回上一页，并传递结果
       Navigator.pop(context, true);
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('选择钱包失败: $e')),
       );
