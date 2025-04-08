@@ -512,9 +512,11 @@ packages:
   wallet_lib:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "5b42f2b8d312e95a2d869d5e3d0bae1a202d13be"
+      url: "https://github.com/Vincent8725/wallet_lib.git"
+    source: git
     version: "1.0.0+1"
   web:
     dependency: transitive

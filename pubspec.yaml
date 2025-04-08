@@ -34,7 +34,7 @@ flutter:
     - assets/icons/dapp/
     - assets/icons/token/
     - assets/scripts/dapp/
-    - assets/config/
+    - assets/config/dapps.json
   module:
     androidX: true
     androidPackage: com.example.wallet_lib
