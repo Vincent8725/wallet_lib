@@ -151,7 +151,7 @@ class _DAppBrowserScreenState extends State<DAppBrowserScreen> {
           _connectWallet();
         }
       } else {
-        if(mounted){
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('请先创建或导入钱包')),
           );
@@ -159,7 +159,7 @@ class _DAppBrowserScreenState extends State<DAppBrowserScreen> {
       }
     } catch (e) {
       dev.log('加载钱包失败: $e');
-      if(mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('加载钱包失败: $e')),
         );
