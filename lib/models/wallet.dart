@@ -15,31 +15,31 @@ class Wallet {
     required this.chainType,
     this.balance = 0.0,
     Map<String, double>? balances, // 添加 balances 参数
-  }) : this.balances = balances ?? {chainType: balance}; // 初始化 balances
+  }) : balances = balances ?? {chainType: balance}; // 初始化 balances
   
   // 复制并更新名称
   Wallet copyWithName(String name) {
     return Wallet(
-      address: this.address,
-      privateKey: this.privateKey,
-      mnemonic: this.mnemonic,
+      address: address,
+      privateKey: privateKey,
+      mnemonic: mnemonic,
       name: name,
-      chainType: this.chainType,
-      balance: this.balance,
-      balances: this.balances, // 保留 balances
+      chainType: chainType,
+      balance: balance,
+      balances: balances, // 保留 balances
     );
   }
   
   // 复制并更新余额
   Wallet copyWithBalance(String chainType, double balance) {
-    final updatedBalances = Map<String, double>.from(this.balances);
+    final updatedBalances = Map<String, double>.from(balances);
     updatedBalances[chainType] = balance;
     
     return Wallet(
-      address: this.address,
-      privateKey: this.privateKey,
-      mnemonic: this.mnemonic,
-      name: this.name,
+      address: address,
+      privateKey: privateKey,
+      mnemonic: mnemonic,
+      name: name,
       chainType: this.chainType,
       balance: chainType == this.chainType ? balance : this.balance,
       balances: updatedBalances, // 更新 balances
@@ -49,13 +49,13 @@ class Wallet {
   // 复制并更新链类型
   Wallet copyWithChainType(String chainType) {
     return Wallet(
-      address: this.address,
-      privateKey: this.privateKey,
-      mnemonic: this.mnemonic,
-      name: this.name,
+      address: address,
+      privateKey: privateKey,
+      mnemonic: mnemonic,
+      name: name,
       chainType: chainType,
-      balance: this.balances[chainType] ?? this.balance, // 使用新链类型的余额
-      balances: this.balances, // 保留 balances
+      balance: balances[chainType] ?? balance, // 使用新链类型的余额
+      balances: balances, // 保留 balances
     );
   }
   

@@ -77,61 +77,61 @@
   ],
   "bsc": [
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "PancakeSwap",
       "url": "https://pancakeswap.finance",
       "icon": "assets/icons/dapp/pancakeswap.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Venus",
       "url": "https://app.venus.io",
       "icon": "assets/icons/dapp/venus.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Alpaca Finance",
       "url": "https://app.alpacafinance.org",
       "icon": "assets/icons/dapp/alpaca.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Autofarm",
       "url": "https://www.bakeryswap.org/",
       "icon": "assets/icons/dapp/bakeryswap.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "MDEX",
       "url": "https://mdex.com",
       "icon": "assets/icons/dapp/mdex.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Biswap",
       "url": "https://biswap.org",
       "icon": "assets/icons/dapp/biswap.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "BabySwap",
       "url": "https://babyswap.finance",
       "icon": "assets/icons/dapp/babyswap.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "ApeSwap",
       "url": "https://apeswap.finance",
       "icon": "assets/icons/dapp/apeswap.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "1inch",
       "url": "https://app.1inch.io",
       "icon": "assets/icons/dapp/1inch.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Beefy Finance",
       "url": "https://app.beefy.finance",
       "icon": "assets/icons/dapp/beefy.png"
@@ -139,19 +139,19 @@
   ],
   "favorite": [
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "PancakeSwap",
       "url": "https://pancakeswap.finance",
       "icon": "assets/icons/dapp/pancakeswap.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Venus",
       "url": "https://app.venus.io",
       "icon": "assets/icons/dapp/venus.png"
     },
     {
-      "chainId":"0x56",
+      "chainId":"0x38",
       "name": "Alpaca Finance",
       "url": "https://app.alpacafinance.org",
       "icon": "assets/icons/dapp/alpaca.png"

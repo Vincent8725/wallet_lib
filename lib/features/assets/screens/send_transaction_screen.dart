@@ -119,10 +119,10 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('转账'),
+        title: const Text('转账'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: [
+          tabs: const [
             Tab(text: '发送'),
             Tab(text: '交易记录'),
           ],
@@ -133,7 +133,7 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
         children: [
           // 发送标签页
           SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Form(
               key: _formKey,
               child: Column(
@@ -142,7 +142,7 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                   // 余额信息
                   Card(
                     child: Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -152,10 +152,10 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                               color: Colors.grey[600],
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
                             '$_balance ${chainConfig.symbol}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
@@ -165,7 +165,7 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                     ),
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   // 收款地址
                   TextFormField(
@@ -173,8 +173,8 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                     decoration: InputDecoration(
                       labelText: '收款地址',
                       hintText: '输入有效的${chainConfig.name}地址',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.account_balance_wallet),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.account_balance_wallet),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -187,17 +187,17 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                     },
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   // 转账金额
                   TextFormField(
                     controller: _amountController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
                       labelText: '转账金额',
                       hintText: '输入转账金额',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.attach_money),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.attach_money),
                       suffixText: chainConfig.symbol,
                     ),
                     validator: (value) {
@@ -219,21 +219,21 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                     },
                   ),
                   
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   
                   if (_errorMessage != null)
                     Padding(
-                      padding: EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
                         _errorMessage!,
-                        style: TextStyle(color: Colors.red),
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ),
                   
                   ElevatedButton(
                     onPressed: _isLoading ? null : _sendTransaction,
                     child: _isLoading
-                        ? SizedBox(
+                        ? const SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
@@ -241,9 +241,9 @@ class _SendTransactionScreenState extends State<SendTransactionScreen> with Sing
                               strokeWidth: 2,
                             ),
                           )
-                        : Text('确认转账'),
+                        : const Text('确认转账'),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ],

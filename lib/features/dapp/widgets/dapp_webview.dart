@@ -13,7 +13,7 @@ class DAppWebView extends StatefulWidget {
   final Future<bool> Function(String url) onConnectRequest;
   final Future<bool> Function(String chainId) onChainSwitch;
   final void Function(String method, dynamic params) onCustomRequest;
-  final Function(String)? onUrlChanged; // 添加URL变更回调
+  final Function(String)? onUrlChanged;
 
   const DAppWebView({
     Key? key,
@@ -32,11 +32,9 @@ class DAppWebView extends StatefulWidget {
 }
 
 class DAppWebViewState extends State<DAppWebView> {
-  // 移除late关键字，使用可空类型
   WebViewController? _controller;
   String _jsScript = '';
   bool _isLoading = true;
-  bool _isInitialized = false;
   final Completer<void> _initCompleter = Completer<void>();
 
   @override
@@ -48,17 +46,13 @@ class DAppWebViewState extends State<DAppWebView> {
   // 异步初始化方法
   Future<void> _initialize() async {
     try {
-      dev.log("chainId:${widget.chainId}",name:"DappWebView" );
-      // 加载JS脚本
       await _loadJS();
-      // 初始化WebView控制器
       _initWebViewController();
-
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
       }
     } catch (e) {
-      dev.log('初始化DAppWebView2失败: $e');
+      dev.log('初始化DAppWebView失败: $e');
       if (!_initCompleter.isCompleted) {
         _initCompleter.completeError(e);
       }
@@ -67,12 +61,10 @@ class DAppWebViewState extends State<DAppWebView> {
 
   Future<void> _loadJS() async {
     try {
-      _jsScript =
-          await rootBundle.loadString('assets/scripts/dapp/dapp_inject.js');
-      dev.log('JS脚本加载成功，长度: ${_jsScript.length}');
+      _jsScript = await rootBundle.loadString('assets/scripts/dapp/dapp_inject.js');
     } catch (e) {
       dev.log('加载JS脚本失败: $e');
-      throw Exception('无法加载DApp注入脚本: $e');
+      throw Exception('无法加载DApp注入脚本');
     }
   }
 
@@ -89,35 +81,29 @@ class DAppWebViewState extends State<DAppWebView> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (url) {
-            setState(() {
-              _isLoading = true;
-            });
-            dev.log('页面开始加载: $url');
+            setState(() => _isLoading = true);
           },
           onPageFinished: (url) async {
-            dev.log('页面加载完成: $url');
-
             if (widget.onUrlChanged != null) {
               widget.onUrlChanged!(url);
             }
 
-            // 注入JS脚本
             await _injectJS(controller);
 
-            // 设置链和账户信息
             if (widget.isWalletConnected && widget.walletAddress.isNotEmpty) {
               await controller.runJavaScript('''
                 setTimeout(function() {
-                  if (window.dappController && typeof window.dappController.autoConnect === 'function') {
-                    window.dappController.autoConnect('${widget.chainId}','${widget.walletAddress}');
-                  }
-                }, 1000);
+                  if (window.ethereum && typeof window.initialize === 'function') {
+                    window.initialize('${widget.chainId}','${widget.walletAddress}');
+                    console.log('初始化成功');
+                  } else {
+                    console.log('初始化失败');
+                  }            
+                }, 500);
               ''');
             }
 
-            setState(() {
-              _isLoading = false;
-            });
+            setState(() => _isLoading = false);
           },
           onUrlChange: (change) {
             if (widget.onUrlChanged != null && change.url != null) {
@@ -126,136 +112,97 @@ class DAppWebViewState extends State<DAppWebView> {
           },
           onWebResourceError: (error) {
             dev.log('WebView错误: ${error.description}');
-            setState(() {
-              _isLoading = false;
-            });
+            setState(() => _isLoading = false);
           },
         ),
       )
-      ..addJavaScriptChannel('Logger', onMessageReceived: (message) async {
-        dev.log('#js控制台消息# ${message.message}');
+      ..addJavaScriptChannel('Logger', onMessageReceived: (message) {
+        dev.log('<js> ${message.message}');
       })
       ..addJavaScriptChannel(
         'FlutterWeb3',
         onMessageReceived: (message) async {
-          dev.log('#接收到的请求消息# ${message.message}');
-
           try {
             final request = jsonDecode(message.message);
             final method = request['method'];
             final params = request['params'];
             final requestId = request['id'];
-            final chainId = request['chainId'];
 
             switch (method) {
               case 'eth_requestAccounts':
-                await updateAccount(widget.walletAddress);
-                // 解析请求
-                await controller.runJavaScript('''
-                  if (window.resolveWeb3Request) {
-                    window.resolveWeb3Request('$requestId', '["${widget.walletAddress}"]');
-                  }
-                ''');
+                await controller.runJavaScript(
+                  'window.resolveWeb3Request("$requestId", ["${widget.walletAddress}"])'
+                );
                 break;
+                
               case 'wallet_requestPermissions':
-                // 处理权限请求
-                dev.log('处理wallet_requestPermissions请求');
                 final connected = await widget.onConnectRequest(widget.url);
                 if (connected) {
-                  // 返回权限许可
                   await controller.runJavaScript('''
-                    if (window.resolveWeb3Request) {
-                      window.resolveWeb3Request('$requestId', '[{"parentCapability":"eth_accounts","caveats":[{"type":"restrictReturnedAccounts","value":["${widget.walletAddress}"]}]}]');
-                    }
-                    // 触发连接事件
+                    window.resolveWeb3Request('$requestId', '[{"parentCapability":"eth_accounts","caveats":[{"type":"restrictReturnedAccounts","value":["${widget.walletAddress}"]}]}]');
                     if (window.ethereum && window.ethereum.triggerEvent) {
                       window.ethereum.triggerEvent('accountsChanged', ["${widget.walletAddress}"]);
                       window.ethereum.triggerEvent('connect', { chainId: window.ethereum.chainId });
-                      console.log('钱包连接成功: ${widget.walletAddress}');
                     }
                   ''');
-                  // 更新账户
-                  await updateAccount(widget.walletAddress);
                 } else {
-                  // 拒绝请求
                   await controller.runJavaScript(
-                      'if (window.rejectWeb3Request) { window.rejectWeb3Request("$requestId", "用户拒绝连接"); }');
+                    'window.rejectWeb3Request("$requestId", "用户拒绝连接")'
+                  );
                 }
                 break;
+                
               case 'wallet_switchEthereumChain':
-                await switchChain(chainId);
-                // 解析请求
-                await controller.runJavaScript('''
-                  if (window.resolveWeb3Request) {
-                    window.resolveWeb3Request('$requestId', 'null');
-                  }
-                ''');
+                final chainId = params[0]['chainId'];
+                final switched = await widget.onChainSwitch(chainId);
+                if (switched) {
+                  await controller.runJavaScript(
+                    'window.resolveWeb3Request("$requestId", null)'
+                  );
+                } else {
+                  await controller.runJavaScript(
+                    'window.rejectWeb3Request("$requestId", "用户拒绝切换链")'
+                  );
+                }
                 break;
+                
               default:
-                widget.onCustomRequest(method, params);
-                // 对于未知请求，尝试返回一个空结果
-                await controller.runJavaScript('''
-                  if (window.resolveWeb3Request) {
-                    window.resolveWeb3Request('$requestId', 'null');
-                    console.log('处理未知请求: $method');
-                  }
-                ''');
+                widget.onCustomRequest(method, params is List ? params[0] : params);
+                await controller.runJavaScript(
+                  'window.resolveWeb3Request("$requestId", null)'
+                );
             }
           } catch (e) {
             dev.log('处理JS消息失败: $e');
-            // 向JS返回错误
-            controller.runJavaScript('''
-              console.error('处理请求失败: $e');
-              if (window.dappController && window.dappController.triggerEvent) {
-                window.dappController.triggerEvent('requestError', {
-                  error: '$e'
-                });
-              }
-            ''');
+            controller.runJavaScript(
+              'window.ethereum.triggerEvent("requestError", { error: "$e" })'
+            );
           }
         },
       );
 
-    // 加载URL
     controller.loadRequest(Uri.parse(widget.url));
 
-    // 设置控制器
-    setState(() {
-      _controller = controller;
-      _isInitialized = true;
-    });
+    setState(() => _controller = controller);
   }
 
-  // 注入JS脚本
   Future<void> _injectJS(WebViewController controller) async {
     try {
-      // 检查脚本是否已加载
       if (_jsScript.isEmpty) {
-        dev.log('JS脚本为空，尝试重新加载');
         await _loadJS();
       }
 
-      // 直接注入脚本
       await controller.runJavaScript(_jsScript);
-      dev.log('JS脚本注入成功');
+      
+      final result = await controller.runJavaScriptReturningResult(
+        'typeof window.ethereum === "object" && typeof window.FlutterWeb3 === "object"'
+      ).then((r) => r.toString() == 'true').catchError((_) => false);
 
-      // 验证注入结果
-      final result = await controller.runJavaScriptReturningResult('''
-        (function() {
-          return typeof window.dappController === 'object' 
-            && typeof window.FlutterWeb3 === 'object';
-        })()
-      ''').then((r) => r == true).catchError((e) {
-          dev.log('JS验证请求失败', error: e);
-          return false;
-      });
-
-      if(result){
-        dev.log('js注入验证成功');
-      }else{
-        dev.log('js注入验证失败');
+      if (result) {
+        await controller.runJavaScript(
+          'window.initialize("${widget.chainId}","${widget.walletAddress}")'
+        );
       }
-
     } catch (e) {
       dev.log('注入JS脚本失败: $e');
     }
@@ -263,52 +210,16 @@ class DAppWebViewState extends State<DAppWebView> {
 
   @override
   Widget build(BuildContext context) {
-    // 如果控制器未初始化，显示加载指示器
     if (_controller == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    // 构建WebView
     return Stack(
       children: [
         WebViewWidget(controller: _controller!),
         if (_isLoading)
-          const Center(
-            child: CircularProgressIndicator(),
-          ),
+          const Center(child: CircularProgressIndicator()),
       ],
     );
-  }
-
-  // 更新当前钱包地址（如切换账户）
-  Future<void> updateAccount(String newAddress) async {
-    if (_controller == null) return;
-
-    try {
-      await _controller!.runJavaScript('''
-        if (window.dappController) {
-          window.dappController.setAccount('$newAddress');
-        }
-      ''');
-    } catch (e) {
-      dev.log('更新账户失败: $e');
-    }
-  }
-
-  // 切换链（外部调用）
-  Future<void> switchChain(String chainId) async {
-    if (_controller == null) return;
-
-    try {
-      await _controller!.runJavaScript('''
-        if (window.dappController) {
-          window.dappController.switchChain('$chainId');
-        }
-      ''');
-    } catch (e) {
-      dev.log('切换链失败: $e');
-    }
   }
 }

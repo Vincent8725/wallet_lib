@@ -57,7 +57,7 @@ class _DAppScreenState extends State<DAppScreen> with SingleTickerProviderStateM
       case 'ETH':
         return '0x1';
       case 'BSC':
-        return '0x56';
+        return '0x38';
       default:
         return '0x1'; // 默认以太坊主网
     }
@@ -68,7 +68,7 @@ class _DAppScreenState extends State<DAppScreen> with SingleTickerProviderStateM
     switch (chainId) {
       case '0x1':
         return 'ETH';
-      case '0x56':
+      case '0x38':
         return 'BSC';
       default:
         return 'ETH';
@@ -110,7 +110,7 @@ class _DAppScreenState extends State<DAppScreen> with SingleTickerProviderStateM
         _startAutoScroll();
       });
     } catch (e) {
-      print('加载DApp配置失败: $e');
+      dev.log('加载DApp配置失败: $e');
       setState(() {
         _isLoading = false;
         // 设置默认值
@@ -218,7 +218,7 @@ class _DAppScreenState extends State<DAppScreen> with SingleTickerProviderStateM
                 );
               }
             },
-            child: Text('切换并继续'),
+            child: const Text('切换并继续'),
           ),
         ],
       ),
